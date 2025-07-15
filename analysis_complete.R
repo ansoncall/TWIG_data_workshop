@@ -9,11 +9,12 @@
 
 ## load packages ####
 
-# Start by loading the required packages: tidyverse, tidycensus, curl, sf,
-# mapview, leaflet,  and units. Use install.packages() to install missing
+# Start by loading the required packages: tidyverse, ggrepel, tidycensus, curl,
+# sf, mapview, leaflet,  and units. Use install.packages() to install missing
 # packages if needed. Use library() to load them.
 
 library(tidyverse) # for data manipulation and visualization
+library(ggrepel) # for tidy plot labels
 library(tidycensus) # for accessing US Census data
 library(curl) # for downloading files
 library(sf) # for handling spatial data
@@ -284,10 +285,24 @@ county_join <- st_join(twig_centroids, income_data, join = st_intersects) %>%
   # drop the geometry column
   st_drop_geometry()
 
-# lef_join() the county_join data to twig_co. use the "unique_id" column as the
+# left_join() the county_join data to twig_co. use the "unique_id" column as the
 # join key.
 
 twig_co <- twig_co %>% left_join(county_join, by = "unique_id")
+
+
+# there were a few records that weren't matched to a county. Let's check them
+# out using
+
+unmatched <- twig_co %>%
+  filter(is.na(county)) %>%
+  st_make_valid
+
+mapview(unmatched, col.region = "red")
+
+# These could be treatments that are partially inside of colorado, but with a
+# centroid falling outside the state. It's also possible (though far less
+# likely) that the "State" field is incorrect in the original data source.
 
 # calculate acres treated in county. Use the st_area() function from sf.
 
@@ -300,23 +315,22 @@ acres_treated <- twig_co %>%
 
 
 # plot the results
-ggplot(acres_treated, aes(x = county_income, y = prop_treated)) +
-  geom_point() +
+
+acres_treated %>%
+  st_drop_geometry %>%
+  drop_units() %>%
+  ggplot(aes(x = county_income, y = prop_treated)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(
     title = "Percentage of County Treated vs. Median Income",
     x = "Median Income",
     y = "Proportion of County Treated"
   ) +
-  geom_label(
-    aes(label = county),
-    nudge_x = 1000,
-    nudge_y = 0.01,
-    check_overlap = TRUE
-  ) +
+  geom_label_repel(aes(label = str_sub(county, end = -18))) +
+  geom_point() +
   theme_minimal()
 
-# some heinous statistical crimes
+# some heinous statistical crimes below.
+
 model <- lm(prop_treated ~ county_income, data = acres_treated %>% drop_units)
 summary(model)
-

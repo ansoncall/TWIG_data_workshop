@@ -5,6 +5,7 @@
 # Session Data files
 .RData
 .RDataTmp
+*.rdata
 
 # User-specific files
 .Ruserdata
@@ -52,3 +53,4 @@ rsconnect/
 # Large data files
 *.gdb
 *.zip
+*.csv
