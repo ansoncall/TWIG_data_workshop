@@ -62,7 +62,7 @@ unzip("data/treatment_index.zip", exdir = "data")
 # At this point, we are ready to read the data into R. TWIG distributed as an
 # ESRI file geodatabase. It can be loaded with st_read() from the sf package.
 
-twig <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
+twig_co <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
 
 # Write out the workspace to an .rdata file so we can load it later (if needed)
 # without having to re-download the raw data.
@@ -104,16 +104,16 @@ summary(twig_co)
 # column. To speed this up, you may want to drop the geometry field with
 # st_drop_geometry first. Then, group_by() error type and summarize.
 
-twig_co %>%
-  st_drop_geometry %>%
-  filter(!is.na(error)) %>%
-  group_by(error) %>%
-  summarize(n = n())
+NULL
+
+
+
+
 
 # Let's exclude those duplicates, again using filter(). Keep everything that is
 # NA or NOT "DUPLICATE-DROP".
-
-twig_co <- twig_co %>% filter(error != "DUPLICATE-DROP" | is.na(error))
+# Note: if you didn't find any duplicates, you can skip over this.
+twig_co <- NULL
 
 # How many records in each twig_category? Make a barplot using the twig_category
 # column.
@@ -135,10 +135,10 @@ barplot(table(twig_co$twig_category, useNA = "ifany"))
 
 # Check the NA values in the twig_category column with filter %>% glimpse
 
-twig_co %>%
-  st_drop_geometry %>%
-  filter(is.na(twig_category)) %>%
-  glimpse()
+NULL
+
+
+
 
 # Note that we're constantly working to improve the data. If you find something
 # that looks weird, feel free to ask about it! We may be able to recommend a
@@ -188,10 +188,10 @@ twig_co %>%
 # creation fails, you'll need to use st_make_valid to fix errant geometries
 # first.
 
-co_planned_ignitions <- twig_co %>%
-  filter(twig_category == "Planned Ignition") %>%
-  mutate(year = year(treatment_date)) %>%
-  st_make_valid
+co_planned_ignitions <- NULL
+
+
+
 
 mapview(co_planned_ignitions,
         zcol = "year",
@@ -236,7 +236,7 @@ mapview(income_data,
 st_crs(twig_co) # WGS84 CRS, Pseudo-Mercator projection (typical web map)
 st_crs(income_data) # NAD83 CRS, unprojected
 
-income_data <- st_transform(income_data, st_crs(twig_co))
+income_data <- NULL
 
 ## Spatial join ####
 
@@ -247,38 +247,38 @@ income_data <- st_transform(income_data, st_crs(twig_co))
 # Some polygons may be multipart - get the centroid of the largest part in this
 # case (of_largest_polyon = TRUE).
 
-twig_centroids <- st_centroid(twig_co, of_largest_polygon = TRUE)
+twig_centroids <- NULL
 
-# Add an area column to the income data. (this will be useful later on.)
+# Add an area_m2 column to the income data. (this will be useful later on.)
 
-income_data <- income_data %>%
-  mutate(area_m2 = st_area(geometry)) # area in m^2
+income_data <- NULL
+
 
 # Use a spatial join (st_join) to assign a county to each treatment centroid.
 
-county_join <- st_join(twig_centroids, income_data, join = st_intersects) %>%
+county_join <- NULL
   # select() the unique_id, NAME, median income and area_m2 columns. Rename if
   # necessary.
-  select(unique_id,
-         county = NAME,
-         county_area_m2 = area_m2,
-         county_income = estimate) %>%
+
+
+
+
   # drop the geometry column
-  st_drop_geometry()
+
 
 # left_join() the county_join data to twig_co. use the "unique_id" column as the
 # join key.
 
-twig_co <- twig_co %>% left_join(county_join, by = "unique_id")
+twig_co <- NULL
 
 
 # There were a few records that weren't matched to a county. Let's check them
 # out using filter(). We also need st_make_valid() to fix any invalid geometries
 # before we can plot.
 
-unmatched <- twig_co %>%
-  filter(is.na(county)) %>%
-  st_make_valid
+unmatched <- NULL
+
+
 
 mapview(unmatched, col.region = "red")
 
@@ -288,12 +288,12 @@ mapview(unmatched, col.region = "red")
 
 # Calculate acres treated in county. Use the st_area() function from sf.
 
-acres_treated <- twig_co %>%
-  group_by(county) %>%
-  summarise(acres_treated = sum(shape_Area),
-            county_area = first(county_area_m2),
-            county_income = first(county_income)) %>%
-  mutate(prop_treated = acres_treated / county_area) # convert m^2 to acres
+acres_treated <- NULL
+
+
+
+
+
 
 
 # Plot the results.
@@ -314,7 +314,7 @@ acres_treated %>%
 
 # Some heinous statistical crimes below.
 
-model <- lm(prop_treated ~ county_income, data = acres_treated %>% drop_units)
+model <- NULL #lm()...
 summary(model)
 
 
