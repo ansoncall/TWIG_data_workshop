@@ -37,7 +37,7 @@ if (!dir.exists("data")) {
 # function. Alternatively, you can download the data manually from the provided
 # URL and place it in a local "data" directory. Here is the direct URL to a
 # Colorado-only subset of TWIG:
-# TODO add URL to colorado data only.
+# https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip
 
 # If you are unable to download the data from the above URL, you can try this
 # backup link:
@@ -46,13 +46,13 @@ if (!dir.exists("data")) {
 # To download the full dataset, you can use the following link (don't try this
 # in the workshop, it's >7GB of data!):
 # https://reshapewildfire.org/resources/twig-data-resources.
-
+current_path = rstudioapi::getActiveDocumentContext()$path # get source file loc
+setwd(dirname(current_path )) # set working director to source file location
 curl_download(
-  "TODO update URL",
+  "https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip",
   destfile = "data/treatment_index.zip",
   quiet = FALSE
 )
-
 # Unzip the downloaded file. Use unzip() or do this manually in your file
 # browser. Put the unzipped files in the "data" directory using the exdir
 # argument.
@@ -62,7 +62,7 @@ unzip("data/treatment_index.zip", exdir = "data")
 # At this point, we are ready to read the data into R. TWIG distributed as an
 # ESRI file geodatabase. It can be loaded with st_read() from the sf package.
 
-twig_co <- st_read("data/treatment_index.gdb", layer = "treatment_index")
+twig <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
 
 # Write out the workspace to an .rdata file so we can load it later (if needed)
 # without having to re-download the raw data.
@@ -304,7 +304,7 @@ acres_treated %>%
   ggplot(aes(x = county_income, y = prop_treated)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(
-    title = "Percentage of County Treated vs. Median Income",
+    title = "Proportion of County Treated vs. Median Income",
     x = "Median Income",
     y = "Proportion of County Treated"
   ) +
@@ -316,3 +316,11 @@ acres_treated %>%
 
 model <- lm(prop_treated ~ county_income, data = acres_treated %>% drop_units)
 summary(model)
+
+
+# Survey ####
+
+# How did you like this exercise? What worked well? What didn't work well?
+# Please share your feedback at the following link:
+# https://forms.office.com/r/wByidJWzZA
+# Thank you!!
