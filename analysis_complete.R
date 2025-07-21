@@ -62,7 +62,7 @@ unzip("data/treatment_index.zip", exdir = "data")
 # At this point, we are ready to read the data into R. TWIG distributed as an
 # ESRI file geodatabase. It can be loaded with st_read() from the sf package.
 
-twig <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
+twig_co <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
 
 # Write out the workspace to an .rdata file so we can load it later (if needed)
 # without having to re-download the raw data.
@@ -289,12 +289,12 @@ mapview(unmatched, col.region = "red")
 # Calculate acres treated in county. Use the st_area() function from sf.
 
 acres_treated <- twig_co %>%
+  st_drop_geometry %>%
   group_by(county) %>%
-  summarise(acres_treated = sum(shape_Area),
+  summarise(acres_treated = sum(Shape_Area),
             county_area = first(county_area_m2),
             county_income = first(county_income)) %>%
   mutate(prop_treated = acres_treated / county_area) # convert m^2 to acres
-
 
 # Plot the results.
 
