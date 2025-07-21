@@ -1,4 +1,4 @@
-# TWIG Data Worshop
+# TWIG Data Workshop
 This is the source code for the TWIG Data Workshop exercise. 
 
 The TWIG (Treatment and Wildfire Interagency Geodatabase) is a spatial database of forest management activities relating to wildfire and fuel reduction. It is the most comprehensive nationwide database of fuel treatments on federal lands. With the upcoming addition state agency and NGO data from the [National Fuels Treatment initiative](https://nft.garphub.org/), it will be the most comprehensive nationwide database of fuel treatments across all lands. 
