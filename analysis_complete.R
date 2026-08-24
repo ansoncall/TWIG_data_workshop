@@ -303,7 +303,11 @@ acres_treated <- twig_co %>%
     county_area = first(county_area_m2),
     county_income = first(county_income)
   ) %>%
-  mutate(prop_treated = acres_treated / county_area) # convert m^2 to acres
+  # calculate proportion of county area treated
+  mutate(prop_treated = acres_treated / county_area) %>%
+  # drop anything that wasn't inside a Colorado county
+  filter(!is.na(county))
+
 
 # Plot the results.
 
@@ -320,6 +324,7 @@ acres_treated %>%
   geom_label_repel(aes(label = str_sub(county, end = -18))) +
   geom_point() +
   theme_minimal()
+
 
 # Some heinous statistical crimes below.
 
