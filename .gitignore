@@ -10,6 +10,9 @@
 # User-specific files
 .Ruserdata
 
+# tidycensus API key
+env.R 
+
 # Example code in package build process
 *-Ex.R
 

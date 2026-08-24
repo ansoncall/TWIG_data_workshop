@@ -3,7 +3,7 @@
 # In this exercise, we will explore the  TWIG treatment index and combine it
 # with some income data from the US Census Bureau to answer the question:
 
-# Do counties with higher incomes have more fuel treatments?
+# Do Colorado counties with higher incomes have more fuel treatments?
 
 # Setup ####
 
@@ -39,17 +39,17 @@ if (!dir.exists("data")) {
 # Colorado-only subset of TWIG:
 # https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip
 
-# If you are unable to download the data from the above URL, you can try this
-# backup link:
-# TODO add link to backup source
-
-# To download the full dataset, you can use the following link (don't try this
+# To download the full dataset, you can use the following links (don't try this
 # in the workshop, it's >7GB of data!):
+# Data Resources page:
 # https://reshapewildfire.org/resources/twig-data-resources.
-current_path = rstudioapi::getActiveDocumentContext()$path # get source file loc
-setwd(dirname(current_path )) # set working director to source file location
+# Direct link to download for use in curl_download():
+# https://sweri-treatment-index.s3.us-west-2.amazonaws.com/treatment_index.zip
+
+current_path <- rstudioapi::getActiveDocumentContext()$path # get source file loc
+setwd(dirname(current_path)) # set working director to source file location
 curl_download(
-  "https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip",
+  "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip",
   destfile = "data/treatment_index.zip",
   quiet = FALSE
 )
@@ -61,7 +61,6 @@ unzip("data/treatment_index.zip", exdir = "data")
 
 # At this point, we are ready to read the data into R. TWIG distributed as an
 # ESRI file geodatabase. It can be loaded with st_read() from the sf package.
-
 twig_co <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
 
 # Write out the workspace to an .rdata file so we can load it later (if needed)
@@ -81,6 +80,12 @@ save(twig_co, file = "data/twig_co.rdata")
 # Access tidy census data with get_acs() from the tidycensus package. The
 # variable name for median income is "B19013_001". Set state = "CO" and year =
 # 2020. Be sure to set geometry = TRUE to get the spatial data.
+
+# set API key
+source("env.R")
+census_api_key(census_key)
+# To save API key in .Renviron:
+# census_api_key(census_key, install = TRUE)
 
 income_data <- get_acs(
   geography = "county",
@@ -193,9 +198,11 @@ co_planned_ignitions <- twig_co %>%
   mutate(year = year(treatment_date)) %>%
   st_make_valid
 
-mapview(co_planned_ignitions,
-        zcol = "year",
-        labFormat = labelFormat(big.mark = ""))
+mapview(
+  co_planned_ignitions,
+  zcol = "year",
+  labFormat = labelFormat(big.mark = "")
+)
 
 ##### Income Data ####
 
@@ -219,9 +226,7 @@ ggplot(income_data, aes(fill = estimate)) +
 
 # Mapview version:
 
-mapview(income_data,
-        zcol = "estimate",
-        legend = TRUE)
+mapview(income_data, zcol = "estimate", legend = TRUE)
 
 
 # Analyze ####
@@ -259,10 +264,12 @@ income_data <- income_data %>%
 county_join <- st_join(twig_centroids, income_data, join = st_intersects) %>%
   # select() the unique_id, NAME, median income and area_m2 columns. Rename if
   # necessary.
-  select(unique_id,
-         county = NAME,
-         county_area_m2 = area_m2,
-         county_income = estimate) %>%
+  select(
+    unique_id,
+    county = NAME,
+    county_area_m2 = area_m2,
+    county_income = estimate
+  ) %>%
   # drop the geometry column
   st_drop_geometry()
 
@@ -283,17 +290,19 @@ unmatched <- twig_co %>%
 mapview(unmatched, col.region = "red")
 
 # These could be treatments that are partially inside of Colorado, but with a
-# centroid falling outside the state. It's also possible (though far less
-# likely) that the "State" field is incorrect in the original data source.
+# centroid falling outside the state. It's also possible that the "State" field
+# is incorrect in the original data source.
 
 # Calculate acres treated in county. Use the st_area() function from sf.
 
 acres_treated <- twig_co %>%
   st_drop_geometry %>%
   group_by(county) %>%
-  summarise(acres_treated = sum(Shape_Area),
-            county_area = first(county_area_m2),
-            county_income = first(county_income)) %>%
+  summarise(
+    acres_treated = sum(shape_Area),
+    county_area = first(county_area_m2),
+    county_income = first(county_income)
+  ) %>%
   mutate(prop_treated = acres_treated / county_area) # convert m^2 to acres
 
 # Plot the results.
@@ -316,7 +325,6 @@ acres_treated %>%
 
 model <- lm(prop_treated ~ county_income, data = acres_treated %>% drop_units)
 summary(model)
-
 
 # Survey ####
 
