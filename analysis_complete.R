@@ -81,6 +81,9 @@ save(twig_co, file = "data/twig_co.rdata")
 # variable name for median income is "B19013_001". Set state = "CO" and year =
 # 2020. Be sure to set geometry = TRUE to get the spatial data.
 
+# TODO revise this section to comment out section using api key.
+# Make curl download the default method here.
+
 # set API key
 source("env.R")
 census_api_key(census_key)
@@ -95,6 +98,19 @@ income_data <- get_acs(
   geometry = TRUE
 )
 
+# If you don't have an API key, we've provided a backup copy that you can access
+# with curl():
+curl_download(
+  "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/income_data.zip",
+  destfile = "data/income_data.zip",
+  quiet = FALSE
+)
+unzip("data/income_data.zip", exdir = "data")
+income_data <- st_read("data/income_data.gdb", layer = "income_data")
+
+
+glimpse(income_data)
+mapview(income_data)
 # Explore ####
 
 ## TWIG ####
