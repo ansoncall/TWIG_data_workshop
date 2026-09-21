@@ -11,7 +11,7 @@
 .Ruserdata
 
 # tidycensus API key
-env.R 
+env.R
 
 # Example code in package build process
 *-Ex.R
@@ -57,3 +57,5 @@ rsconnect/
 *.gdb
 *.zip
 *.csv
+
+data/
