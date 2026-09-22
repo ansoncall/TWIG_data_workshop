@@ -3,7 +3,7 @@ This is the source code for the 2026 TWIG Data Workshop activities.
 
 The TWIG (Treatment and Wildfire Interagency Geodatabase) is a spatial database
 of forest management activities relating to wildfire and fuel reduction. 
-With the recent addition state agency and NGO data from the [National Fuels
+With the recent addition of state agency and NGO data from the [National Fuels
 Treatment initiative](https://nft.garphub.org/), it is now the most
 comprehensive nationwide database of fuel treatments across all lands.
 
