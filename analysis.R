@@ -3,7 +3,7 @@
 # In this exercise, we will explore the  TWIG treatment index and combine it
 # with some income data from the US Census Bureau to answer the question:
 
-# Do counties with higher incomes have more fuel treatments?
+# Do Colorado counties with higher incomes have more fuel treatments?
 
 # Setup ####
 
@@ -15,7 +15,6 @@
 
 library(tidyverse) # for data manipulation and visualization
 library(ggrepel) # for tidy plot labels
-library(tidycensus) # for accessing US Census data
 library(curl) # for downloading files
 library(sf) # for handling spatial data
 library(mapview) # for interactive maps
@@ -39,17 +38,17 @@ if (!dir.exists("data")) {
 # Colorado-only subset of TWIG:
 # https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip
 
-# If you are unable to download the data from the above URL, you can try this
-# backup link:
-# TODO add link to backup source
-
-# To download the full dataset, you can use the following link (don't try this
+# To download the full dataset, you can use the following links (don't try this
 # in the workshop, it's >7GB of data!):
+# Data Resources page:
 # https://reshapewildfire.org/resources/twig-data-resources.
-current_path = rstudioapi::getActiveDocumentContext()$path # get source file loc
-setwd(dirname(current_path )) # set working director to source file location
+# Direct link to download for use in curl_download():
+# https://sweri-treatment-index.s3.us-west-2.amazonaws.com/treatment_index.zip
+
+current_path <- rstudioapi::getActiveDocumentContext()$path # get source file loc
+setwd(dirname(current_path)) # set working director to source file location
 curl_download(
-  "https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip",
+  "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip",
   destfile = "data/treatment_index.zip",
   quiet = FALSE
 )
@@ -61,7 +60,6 @@ unzip("data/treatment_index.zip", exdir = "data")
 
 # At this point, we are ready to read the data into R. TWIG distributed as an
 # ESRI file geodatabase. It can be loaded with st_read() from the sf package.
-
 twig_co <- st_read("data/treatment_index_co.gdb", layer = "treatment_index_co")
 
 # Write out the workspace to an .rdata file so we can load it later (if needed)
@@ -78,17 +76,37 @@ save(twig_co, file = "data/twig_co.rdata")
 # To complete this analysis, we'll also need some income data. This data is from
 # the American Community Survey, which comes from the US Census Bureau.
 
-# Access tidy census data with get_acs() from the tidycensus package. The
-# variable name for median income is "B19013_001". Set state = "CO" and year =
-# 2020. Be sure to set geometry = TRUE to get the spatial data.
-
-income_data <- get_acs(
-  geography = "county",
-  variables = "B19013_001",
-  state = "CO",
-  year = 2020,
-  geometry = TRUE
+# If you don't have an API key, we've provided a backup copy that you can access
+# with curl():
+curl_download(
+  "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/income_data.zip",
+  destfile = "data/income_data.zip",
+  quiet = FALSE
 )
+unzip("data/income_data.zip", exdir = "data")
+income_data <- st_read("data/income_data.gdb", layer = "income_data")
+
+# # OPTIONAL: If you have your own Census API key, you can use the tidycensus
+# # package to access the data directly. If you don't have a key, you can
+# # request one here: https://api.census.gov/data/key_signup.html
+#
+# library(tidycensus) # for accessing US Census data
+# # It's good practice to store your API key in a separate file that is not
+# # shared publicly. For example, store it in a file called "env.R" that is not
+# # included in the repository. The env.R file should contain a line like this:
+# # census_key <- "YOUR_API_KEY_HERE"
+# source("env.R")
+# census_api_key(census_key)
+# # To save API key in .Renviron:
+# # census_api_key(census_key, install = TRUE)
+#
+# income_data <- get_acs(
+#   geography = "county",
+#   variables = "B19013_001",
+#   state = "CO",
+#   year = 2020,
+#   geometry = TRUE
+# )
 
 # Explore ####
 
@@ -107,18 +125,15 @@ summary(twig_co)
 NULL
 
 
-
-
-
 # Let's exclude those duplicates, again using filter(). Keep everything that is
 # NA or NOT "DUPLICATE-DROP".
-# Note: if you didn't find any duplicates, you can skip over this.
+
 twig_co <- NULL
 
 # How many records in each twig_category? Make a barplot using the twig_category
 # column.
 
-twig_co %>%
+twig_co |>
   ggplot(aes(x = twig_category)) +
   geom_bar() +
   labs(
@@ -133,11 +148,9 @@ twig_co %>%
 barplot(table(twig_co$twig_category, useNA = "ifany"))
 
 
-# Check the NA values in the twig_category column with filter %>% glimpse
+# Check for NA values in the twig_category column with filter |> glimpse
 
 NULL
-
-
 
 
 # Note that we're constantly working to improve the data. If you find something
@@ -148,12 +161,12 @@ NULL
 # using year() to summarize the treatment_date column. You can first use
 # st_drop_geometry() for speed.
 
-twig_co %>%
-  st_drop_geometry() %>%
-  mutate(treatment_year = year(treatment_date)) %>%
+twig_co |>
+  st_drop_geometry() |>
+  mutate(treatment_year = year(treatment_date)) |>
   # Group_by() the new column and count the number of records with summarize().
-  group_by(treatment_year) %>%
-  summarise(n = n()) %>%
+  group_by(treatment_year) |>
+  summarise(n = n()) |>
   # Plot the results with ggplot2.
   ggplot(aes(x = treatment_year, y = n)) +
   geom_point() +
@@ -167,12 +180,12 @@ twig_co %>%
 # How many records in each year and twig_category? Add twig_category as a group,
 # and plot groups by color.
 
-twig_co %>%
-  st_drop_geometry() %>%
-  mutate(treatment_year = year(treatment_date)) %>%
+twig_co |>
+  st_drop_geometry() |>
+  mutate(treatment_year = year(treatment_date)) |>
   # group_by() the new column and count the number of records with summarize().
-  group_by(treatment_year, twig_category) %>%
-  summarise(n = n()) %>%
+  group_by(treatment_year, twig_category) |>
+  summarise(n = n()) |>
   # Plot the results with ggplot2.
   ggplot(aes(x = treatment_year, y = n, color = twig_category)) +
   geom_point() +
@@ -183,19 +196,18 @@ twig_co %>%
     y = "Number of Treatments"
   )
 
-# Make a map of all the "planned ignition" treatments in Colorado. Use filter()
-# to create a data subset, then use mapview() to create a map. If feature
-# creation fails, you'll need to use st_make_valid to fix errant geometries
-# first.
+# Make a map of all the "planned ignition" (prescribed burn) treatments in
+# Colorado. Use filter() to create a data subset, then use mapview() to create a
+# map. If feature creation fails, you'll need to use st_make_valid to fix errant
+# geometries first.
 
 co_planned_ignitions <- NULL
 
-
-
-
-mapview(co_planned_ignitions,
-        zcol = "year",
-        labFormat = labelFormat(big.mark = ""))
+mapview(
+  co_planned_ignitions,
+  zcol = "year",
+  labFormat = labelFormat(big.mark = "")
+)
 
 ##### Income Data ####
 
@@ -219,9 +231,7 @@ ggplot(income_data, aes(fill = estimate)) +
 
 # Mapview version:
 
-mapview(income_data,
-        zcol = "estimate",
-        legend = TRUE)
+mapview(income_data, zcol = "estimate", legend = TRUE)
 
 
 # Analyze ####
@@ -249,7 +259,9 @@ income_data <- NULL
 
 twig_centroids <- NULL
 
-# Add an area_m2 column to the income data. (this will be useful later on.)
+# Add an area column to the income data. (this will be useful later on.)
+# NOTE: make sure you know the name of the geometry column in your income_data
+# object. It may be called "SHAPE" or "geometry".
 
 income_data <- NULL
 
@@ -257,14 +269,13 @@ income_data <- NULL
 # Use a spatial join (st_join) to assign a county to each treatment centroid.
 
 county_join <- NULL
-  # select() the unique_id, NAME, median income and area_m2 columns. Rename if
-  # necessary.
+# select() the unique_id, NAME, median income and area_m2 columns. Rename if
+# necessary.
+NULL
 
 
-
-
-  # drop the geometry column
-
+# drop the geometry column
+NULL
 
 # left_join() the county_join data to twig_co. use the "unique_id" column as the
 # join key.
@@ -279,28 +290,27 @@ twig_co <- NULL
 unmatched <- NULL
 
 
-
 mapview(unmatched, col.region = "red")
 
 # These could be treatments that are partially inside of Colorado, but with a
-# centroid falling outside the state. It's also possible (though far less
-# likely) that the "State" field is incorrect in the original data source.
+# centroid falling outside the state. It's also possible that the "State" field
+# is incorrect in the original data source (look for the "SPATIAL" tag in the
+# error field).
 
 # Calculate acres treated in county. Use the st_area() function from sf.
 
 acres_treated <- NULL
 
-
-
-
-
-
+# calculate proportion of county area treated
+NULL
+# drop anything that wasn't inside a Colorado county
+NULL
 
 # Plot the results.
 
-acres_treated %>%
-  st_drop_geometry %>%
-  drop_units() %>%
+acres_treated |>
+  st_drop_geometry |>
+  drop_units() |>
   ggplot(aes(x = county_income, y = prop_treated)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(
@@ -312,11 +322,11 @@ acres_treated %>%
   geom_point() +
   theme_minimal()
 
+
 # Some heinous statistical crimes below.
 
 model <- NULL #lm()...
 summary(model)
-
 
 # Survey ####
 
