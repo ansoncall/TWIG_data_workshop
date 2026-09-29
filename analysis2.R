@@ -128,7 +128,7 @@ polys_fire_all <- bind_rows(polys_treatm_fire, polys_wildfire) |>
 #   extent), so we can instead compare many-to-one between polygons and the
 #   single merged mask.
 
-# First create masks for fire-based treatments and mechanical treatments. Use
+# First, create masks for fire-based treatments and mechanical treatments. Use
 #   st_union() to accomplish this.
 mask_fire <- NULL
 mask_mech <- NULL
