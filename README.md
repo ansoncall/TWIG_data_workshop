@@ -31,13 +31,13 @@ using R. Participants should have already installed:
 This repository includes two activities, each with two scripts: 
 ```
 .
-│   README.md                // this file
-│   LICENSE                  // MIT License: all code is open-source
-│   .gitignore               // controls which files are tracked by git
-│   analysis1.R              // participants will write code for Activity 1 here
-│   analysis1_complete.R     // Activity 1 answer key
-│   analysis2.R              // participants will write code for Activity 2 here
-│   analysis2_complete.R     // Activity 2 answer key
+├───README.md                // this file
+├───LICENSE                  // MIT License: all code is open-source
+├───.gitignore               // controls which files are tracked by git
+├───analysis1.R              // participants will write code for Activity 1 here
+├───analysis1_complete.R     // Activity 1 answer key
+├───analysis2.R              // participants will write code for Activity 2 here
+├───analysis2_complete.R     // Activity 2 answer key
 
 ```
 
@@ -47,21 +47,22 @@ write their code. The ```analysis*_complete.R``` script is the "answer key"
 
 In addition to these files, we will create a "data" folder at the beginning of
 Activity 1 to store data downloaded for analysis (don't do this until prompted).
-When all files are downloaded and extracted the data folder should look like
-this:
+When both activities are finished, the data folder should look like this:
+
 ```
 .
 │   
 └───data
-    │   income_data.zip
-    │   treatment_index.zip
-    │   twig_co.rdata
-    │   
-    ├───income_data.gdb
-    │       
-    └───treatment_index_co.gdb
-
-    # TODO add data files for Activity 2
+    ├───income_data.zip                         // Data downloaded in Activity 1 
+    ├───treatment_index.zip                     // Data downloaded in Activity 1 
+    ├───treatment_index_flagstaff_area.zip      // Data downloaded in Activity 2 
+    ├───Perimeters_flagstaff_area.zip           // Data downloaded in Activity 2 
+    ├───twig_co.rdata                           // Data object from Activity 1         
+    ├───income_data.gdb                         // Data used in Activity 1
+    ├───treatment_index_co.gdb                  // Data used in Activity 1
+    ├───treatment_index_flagstaff_area.gdb      // Data used in Activity 2
+    └───Perimeters_flagstaff_area.gdb           // Accidental "double-nesting"
+        └───Perimeters_flagstaff_area.gdb       // Data used in Activity 2
 
 ```
 
