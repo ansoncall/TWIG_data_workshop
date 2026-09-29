@@ -42,32 +42,41 @@ setwd(dirname(current_path)) # set working director to source file location
 if (!dir.exists("data")) {
   dir.create("data")
 }
-if (!file.exists("data/treatment_index_flg.gdb")) {
+if (!file.exists("data/treatment_index_flagstaff_area.gdb")) {
   # TWIG can be downloaded directly from the web using the curl_download()
   #   function. Alternatively, you can download the data manually from the given
-  #   URL and place it in a local "data" directory. Here is the direct URL to a
-  #   Colorado-only subset of TWIG:
-  # https://sweri-treament-index.s3.us-west-2.amazonaws.com/treatment_index_co.zip
-  t_url <- "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/treatment_index_flagstaff_area.zip"
+  #   URL and place it in a local "data" directory. 
+  t_url <- 
+    "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/treatment_index_flagstaff_area.zip"
   curl_download(t_url, destfile = "data/treatment_index_flg.zip", quiet = FALSE)
-  unzip("data/treatment_index.zip", exdir = "data")
+  unzip("data/treatment_index_flg.zip", exdir = "data")
 }
 
-if (!file.exists("data/Perimeters_flg.gdb")) {
+if (!file.exists("data/Perimeters_flagstaff_area.gdb")) {
   # Similarly, read the wildfire perimeters data. These will be combined with
   #   fire-based treatments from flg_treatm to aggregate all polygons that show
   #   where fire has burned on the landscape
-  p_url <- "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/Perimeters_flagstaff_area.zip"
+  p_url <-
+    "https://sweri-treatment-index.s3.us-west-2.amazonaws.com/perimeters_flagstaff_area.zip"
   curl_download(p_url, destfile = "data/Perimeters_flg.zip", quiet = FALSE)
   unzip("data/Perimeters_flg.zip", exdir = "data")
 }
 
 # At this point, we are ready to read the data into R. TWIG is distributed as an
 #   ESRI file geodatabase. It can be loaded with st_read() from the sf package.
-flg_treatm <- st_read("data/treatment_index_flg.gdb", layer = "treatment_index")
+flg_treatm <- st_read(
+"data/treatment_index_flagstaff_area.gdb",
+layer = "treatment_index"
+)
 
 # The same is the case for wildfire Perimeters.
-flg_wildfire <- st_read("data/Perimeters_flg.gdb", layer = "Perimeters")
+flg_wildfire <- st_read(
+  # Note: we've accidentally doubly-nested the perimeters gdb within an
+  # extraneous ".gdb" folder. Our mistake. Make sure to keep the following
+  # string as-is to load the fire perimeters geodatabase correctly. 
+  "data/Perimeters_flagstaff_area.gdb/Perimeters_flagstaff_area.gdb",
+  layer = "Perimeters"
+)
 
 # ----------------------------------------------------------------------------#
 ### Part 2 - Wrangling geospatial data from TWIG ####
@@ -166,10 +175,12 @@ polys_both <- NULL
 
 # Update mapview baselayer for viewing
 mapviewOptions(
-  basemaps = c("Esri.WorldGrayCanvas",
-               "OpenStreetMap",
-               "Esri.WorldImagery",
-               "OpenTopoMap")
+  basemaps = c(
+    "Esri.WorldGrayCanvas",
+    "OpenStreetMap",
+    "Esri.WorldImagery",
+    "OpenTopoMap"
+  )
 )
 
 # We've got our polygons and categories, but we don't want to display them
