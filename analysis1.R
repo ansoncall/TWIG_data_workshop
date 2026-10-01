@@ -309,7 +309,7 @@ NULL
 # Plot the results.
 
 acres_treated |>
-  st_drop_geometry |>
+  st_drop_geometry() |>
   drop_units() |>
   ggplot(aes(x = county_income, y = prop_treated)) +
   geom_smooth(method = "lm", se = FALSE) +
