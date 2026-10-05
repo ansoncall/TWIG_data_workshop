@@ -26,6 +26,7 @@ library(units) # for handling spatial units
 # Make a "data" directory if it doesn't already exist. This is where we will
 # download and store the raw data files. You can do this manually or use R's
 # dir.create() function.
+
 if (!dir.exists("data")) {
   dir.create("data")
 }
@@ -202,6 +203,8 @@ twig_co |>
 # geometries first.
 
 co_planned_ignitions <- NULL
+
+mapviewOptions(basemaps = "OpenStreetMap") # set default basemap to OSM
 
 mapview(
   co_planned_ignitions,
